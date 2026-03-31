@@ -1,0 +1,32 @@
+# Django
+*.pyc
+__pycache__/
+*.pyo
+db.sqlite3
+*.sqlite3
+media/
+staticfiles/
+
+# Python
+*.egg-info/
+dist/
+build/
+.env
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.suo
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Downloads temporários
+*.csv.tmp

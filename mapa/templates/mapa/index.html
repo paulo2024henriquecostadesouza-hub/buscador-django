@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador de Serviços - Mapa de Calor</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+
+    <style>
+        :root {
+            --verde:   #2E4E46;
+            --laranja: #C16A42;
+            --fundo:   #1a2e28;
+            --card:    #243d35;
+            --borda:   #3d6055;
+            --claro:   #e8f0ee;
+            --muted:   #a8c4bc;
+            --feito:   #2e8b57;
+            --pend:    #C16A42;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Rubik', 'Segoe UI', sans-serif; }
+
+        body {
+            background: linear-gradient(160deg, var(--verde) 0%, var(--fundo) 50%, #0f1f1b 100%);
+            color: var(--claro);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── Header ─────────────────────────────────────────── */
+        header {
+            background: linear-gradient(90deg, var(--verde), var(--laranja));
+            padding: 6px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+            flex-wrap: wrap;
+        }
+
+        header h1 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #fff;
+            white-space: nowrap;
+        }
+
+        .filtros {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+            flex: 1;
+        }
+
+        .filtros select,
+        .filtros input[type=text],
+        .filtros input[type=month] {
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-family: 'Rubik', sans-serif;
+        }
+        .filtros select option { background: var(--fundo); color: var(--claro); }
+        .filtros input[type=month]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+
+        .filtros select:focus,
+        .filtros input:focus {
+            outline: none;
+            border-color: rgba(255,255,255,0.7);
+        }
+
+        .campo-busca {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .campo-busca input { width: 220px; padding-right: 26px; }
+        .campo-busca .icone-busca {
+            position: absolute; right: 7px;
+            color: rgba(255,255,255,0.7); font-size: 0.82rem; pointer-events: none;
+        }
+
+        .filtros button {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.4);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .filtros button:hover { background: rgba(255,255,255,0.3); }
+
+        .filtros .sep {
+            width: 1px; height: 22px;
+            background: rgba(255,255,255,0.25);
+            flex-shrink: 0;
+        }
+
+        /* Área de programação (checkbox + date) */
+        .prog-control {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 6px;
+            padding: 3px 8px;
+        }
+        .prog-control label { font-size: 0.8rem; color: #fff; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+        .prog-control .sep-v { width: 1px; height: 16px; background: rgba(255,255,255,0.3); }
+        #dataProgramacao {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 0.78rem;
+            font-family: 'Rubik', sans-serif;
+            cursor: pointer;
+            width: 120px;
+            display: none;
+        }
+        #dataProgramacao::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+        .btn-limpar-data {
+            background: none; border: none; color: rgba(255,255,255,0.7);
+            cursor: pointer; font-size: 0.78rem; padding: 0 2px;
+            display: none;
+        }
+        .btn-limpar-data:hover { color: #fff; }
+
+        .acoes {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .btn-link {
+            padding: 4px 10px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border: 1px solid;
+        }
+        .btn-importar { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.35); color: #fff; }
+        .btn-exportar { background: rgba(46,139,87,0.3); border-color: #6fcf97; color: #b7f5d0; }
+
+        .btn-stats {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.35);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .btn-stats.ativo { background: rgba(255,255,255,0.3); }
+
+        .stats-mini {
+            font-size: 0.76rem;
+            color: rgba(255,255,255,0.8);
+            white-space: nowrap;
+        }
+        .stats-mini span { color: #fff; font-weight: 700; }
+
+        /* ── Mapa ─────────────────────────────────────────────── */
+        #mapa { flex: 1; width: 100%; }
+
+        /* ── Painel de Estatísticas ──────────────────────────── */
+        #painel-stats {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: var(--card);
+            border: 1px solid var(--borda);
+            border-radius: 10px;
+            padding: 14px;
+            z-index: 1000;
+            width: 250px;
+            max-height: calc(100vh - 80px);
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            display: none;
+            scrollbar-width: thin;
+            scrollbar-color: var(--borda) transparent;
+        }
+
+        #painel-stats h3 {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--laranja);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .stats-secao {
+            margin-bottom: 14px;
+        }
+        .stats-secao-titulo {
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 7px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid var(--borda);
+        }
+
+        /* Cards totais */
+        .stats-totais {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 5px;
+            margin-bottom: 14px;
+        }
+        .stats-total-card {
+            background: rgba(255,255,255,0.06);
+            border-radius: 7px;
+            padding: 8px 6px;
+            text-align: center;
+        }
+        .stats-total-card .val {
+            font-size: 1.2rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .stats-total-card .label {
+            font-size: 0.62rem;
+            color: var(--muted);
+            margin-top: 3px;
+        }
+        .val-total  { color: var(--claro); }
+        .val-feito  { color: #6fcf97; }
+        .val-pend   { color: #f6ad55; }
+
+        /* Barras */
+        .bar-item {
+            margin-bottom: 6px;
+        }
+        .bar-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.73rem;
+            margin-bottom: 2px;
+            color: var(--claro);
+        }
+        .bar-header .bar-nome {
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            max-width: 170px;
+        }
+        .bar-header .bar-val { color: var(--muted); flex-shrink: 0; margin-left: 4px; }
+        .bar-track {
+            height: 5px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.4s ease;
+        }
+
+        /* Regional cards */
+        .regional-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 7px;
+            padding: 7px 10px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .regional-nome {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--claro);
+        }
+        .regional-badges {
+            display: flex;
+            gap: 4px;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+        .badge-regional {
+            font-size: 0.65rem;
+            padding: 1px 7px;
+            border-radius: 8px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .badge-setores { background: rgba(124,58,237,0.3); color: #c4b5fd; }
+        .badge-pontos  { background: rgba(46,139,87,0.3);  color: #6fcf97; }
+
+        /* ── Legenda ─────────────────────────────────────────── */
+        .legenda {
+            position: absolute;
+            bottom: 30px;
+            right: 10px;
+            background: var(--card);
+            border: 1px solid var(--borda);
+            border-radius: 10px;
+            padding: 12px;
+            z-index: 1000;
+            font-size: 0.78rem;
+            min-width: 180px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+            color: var(--claro);
+        }
+        .legenda h4 { color: var(--laranja); margin-bottom: 8px; font-size: 0.82rem; font-weight: 600; }
+        .legenda-item { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; }
+        .dot { width: 13px; height: 13px; border-radius: 50%; flex-shrink: 0; }
+        .legenda-status { display: flex; gap: 6px; margin-bottom: 6px; }
+        .badge-feito { background: var(--feito); color: #fff; padding: 2px 8px; border-radius: 8px; font-size: 0.72rem; font-weight: 600; }
+        .badge-pend  { background: var(--pend);  color: #fff; padding: 2px 8px; border-radius: 8px; font-size: 0.72rem; font-weight: 600; }
+
+        /* ── Painel Rota ─────────────────────────────────────── */
+        #painel-rota {
+            position: absolute;
+            bottom: 30px;
+            left: 10px;
+            background: var(--card);
+            border: 2px solid var(--borda);
+            border-radius: 10px;
+            padding: 12px 14px;
+            z-index: 1000;
+            font-size: 0.78rem;
+            max-width: 220px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+            display: none;
+            color: var(--claro);
+        }
+        #painel-rota h4 { color: var(--laranja); margin-bottom: 6px; font-size: 0.82rem; font-weight: 600; }
+        #painel-rota .setor-badge {
+            background: rgba(124,58,237,0.25); color: #c4b5fd;
+            padding: 2px 8px; border-radius: 10px; font-weight: 700;
+            font-size: 0.72rem; display: inline-block; margin-bottom: 8px;
+        }
+        #painel-rota ul { max-height: 220px; overflow-y: auto; padding-left: 14px; margin: 0; color: var(--muted); }
+        #painel-rota li { margin-bottom: 4px; font-size: 0.77rem; }
+        #painel-rota .btn-fechar {
+            margin-top: 8px; width: 100%; background: rgba(255,255,255,0.07);
+            border: 1px solid var(--borda); border-radius: 6px;
+            padding: 4px 0; cursor: pointer; font-size: 0.75rem; color: var(--muted);
+        }
+
+        /* ── Popups ──────────────────────────────────────────── */
+        .leaflet-popup-content-wrapper {
+            background: var(--card);
+            color: var(--claro);
+            border: 1px solid var(--borda);
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+        .leaflet-popup-tip { background: var(--borda); }
+
+        .popup-titulo    { font-weight: 700; color: var(--laranja); margin-bottom: 4px; font-size: 0.92rem; }
+        .popup-endereco  { font-size: 0.78rem; color: var(--muted); margin-bottom: 6px; }
+        .popup-resumo    { display: flex; gap: 6px; margin-bottom: 8px; }
+
+        .popup-fonte-badge {
+            display: inline-block; font-size: 0.7rem; font-weight: 700;
+            padding: 2px 8px; border-radius: 10px; margin-bottom: 8px; color: #fff;
+        }
+
+        .popup-servico {
+            background: rgba(255,255,255,0.06);
+            border-radius: 6px; padding: 5px 8px;
+            margin-bottom: 4px; font-size: 0.78rem; border-left: 3px solid;
+        }
+        .popup-servico .tipo { color: var(--laranja); font-weight: 600; }
+        .popup-servico .status-feito { color: #6fcf97; font-weight: 600; }
+        .popup-servico .status-pend  { color: #f6ad55; font-weight: 600; }
+        .popup-servico .data { color: var(--muted); }
+        .popup-servico .fonte-tag {
+            font-size: 0.68rem; font-weight: 700; padding: 1px 5px;
+            border-radius: 8px; color: #fff; display: inline-block; margin-top: 2px;
+        }
+
+        .popup-prog-titulo { font-weight: 700; color: #a78bfa; font-size: 0.9rem; margin-bottom: 4px; }
+        .popup-prog-setor {
+            font-size: 0.72rem; background: rgba(124,58,237,0.25); color: #c4b5fd;
+            padding: 2px 8px; border-radius: 10px; display: inline-block;
+            margin-bottom: 6px; font-weight: 700;
+        }
+        .popup-prog-info { font-size: 0.78rem; color: var(--claro); margin-bottom: 3px; }
+        .popup-prog-info b { color: var(--muted); }
+        .popup-prog-datas { margin-top: 8px; }
+        .popup-prog-datas .label { font-size: 0.72rem; color: var(--muted); font-weight: 700; margin-bottom: 4px; }
+        .popup-prog-data-item {
+            display: inline-block; background: #7c3aed; color: #fff;
+            font-size: 0.72rem; font-weight: 700; padding: 2px 8px;
+            border-radius: 8px; margin: 2px 2px 2px 0;
+        }
+        .popup-prog-data-item.proxima { background: var(--feito); }
+        .popup-prog-data-item.destacada { background: var(--laranja); box-shadow: 0 0 0 2px rgba(255,255,255,0.4); }
+        .popup-prog-sem-data { font-size: 0.76rem; color: var(--muted); font-style: italic; }
+
+        .btn-ver-rota {
+            display: block; width: 100%; margin-top: 10px;
+            background: #7c3aed; color: white; border: none;
+            border-radius: 6px; padding: 6px 0; font-size: 0.8rem;
+            font-weight: 700; cursor: pointer; text-align: center;
+        }
+        .btn-ver-rota:hover { background: #6d28d9; }
+        .btn-ver-rota.ativo { background: var(--feito); }
+
+        /* ── Tooltips ────────────────────────────────────────── */
+        .tooltip-rua {
+            background: rgba(124,58,237,0.92); color: white; border: none;
+            border-radius: 5px; font-weight: 700; font-size: 0.78rem;
+            padding: 3px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.3); white-space: nowrap;
+        }
+        .tooltip-rua::before { display: none; }
+        .tooltip-regional {
+            background: var(--card); border: 1px solid var(--borda) !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3); font-weight: 600;
+            font-size: 0.82rem; padding: 4px 10px; border-radius: 6px; color: var(--claro);
+        }
+
+        /* ── Loading / Aviso ─────────────────────────────────── */
+        #loading {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--card); padding: 20px 30px;
+            border-radius: 10px; border: 1px solid var(--laranja);
+            z-index: 2000; display: none; color: var(--claro); font-weight: 600;
+        }
+
+        #aviso-sem-resultado {
+            position: absolute; top: 10px; left: 50%;
+            transform: translateX(-50%);
+            background: var(--card); border: 1px solid var(--laranja);
+            border-radius: 8px; padding: 8px 18px; z-index: 1500;
+            font-size: 0.82rem; color: var(--laranja); font-weight: 600;
+            display: none; box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        /* Badge de data ativa na programação */
+        #badge-data-prog {
+            font-size: 0.72rem; font-weight: 700;
+            background: rgba(193,106,66,0.3); color: #f6ad55;
+            padding: 2px 7px; border-radius: 8px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>&#127758; Buscador de Serviços</h1>
+
+    <div class="filtros">
+
+        <!-- Busca por endereço -->
+        <div class="campo-busca">
+            <input type="text" id="filtroBusca"
+                   placeholder="Endereço ou nº OS..."
+                   onkeydown="if(event.key==='Enter') carregarDados()"
+                   oninput="agendarBusca()">
+            <span class="icone-busca">&#128269;</span>
+        </div>
+
+        <!-- Filtro de mês -->
+        <input type="month" id="filtroMes" title="Filtrar por mês de execução"
+               onchange="carregarDados(); carregarStats()">
+
+        <div class="sep"></div>
+
+        <!-- Fonte / Tipo / Status -->
+        <select id="filtroFonte" onchange="filtrarStatusPorFonte(); carregarDados()">
+            <option value="">Todas as Fontes</option>
+            {% for f in fontes %}
+            <option value="{{ f }}">{{ f }}</option>
+            {% endfor %}
+        </select>
+
+        <select id="filtroTipo" onchange="carregarDados()">
+            <option value="">Todos os Tipos</option>
+            {% for tipo in tipos %}
+            <option value="{{ tipo }}">{{ tipo }}</option>
+            {% endfor %}
+        </select>
+
+        <select id="filtroStatus" onchange="carregarDados()">
+            <option value="">Todos os Status</option>
+            {% for s in status_list %}
+            <option value="{{ s }}">{{ s }}</option>
+            {% endfor %}
+        </select>
+
+        <select id="filtroResolucao" onchange="carregarDados(); carregarStats()" style="border-color:rgba(255,255,255,0.5);">
+            <option value="">✓⚡ Feito + Pendente</option>
+            <option value="feito">✓ Somente Feitos</option>
+            <option value="pendente">⚡ Somente Pendentes</option>
+        </select>
+
+        <button onclick="carregarDados(); carregarStats()">Filtrar</button>
+        <button onclick="limparFiltros()">Limpar</button>
+
+        <div class="sep"></div>
+
+        <!-- Programação + data -->
+        <div class="prog-control">
+            <label>
+                <input type="checkbox" id="toggleProgramacao"
+                       onchange="toggleCamadaProgramacao(); mostrarDataProg()" checked>
+                Prog.
+            </label>
+            <div class="sep-v"></div>
+            <input type="date" id="dataProgramacao"
+                   title="Mostrar apenas programações deste dia"
+                   onchange="carregarProgramacao(); atualizarBadgeData()">
+            <button class="btn-limpar-data" id="btnLimparData" onclick="limparDataProg()" title="Limpar filtro de data">✕</button>
+        </div>
+        <span id="badge-data-prog"></span>
+
+    </div>
+
+    <div class="acoes">
+        <div class="stats-mini">
+            <span id="qtdServicos">{{ total_servicos }}</span> serv
+            &nbsp;|&nbsp;
+            <span id="qtdProgramados">{{ total_programados }}</span> prog
+        </div>
+        <button class="btn-stats" id="btnStats" onclick="toggleStats()">&#128202; Stats</button>
+        <a href="{% url 'mapa:importar' %}" class="btn-link btn-importar">+ Importar</a>
+        <a id="btnExportar" href="{% url 'mapa:exportar_excel' %}" class="btn-link btn-exportar">&#8595; Excel</a>
+    </div>
+</header>
+
+<div id="mapa"></div>
+
+<!-- Aviso sem resultado -->
+<div id="aviso-sem-resultado">&#128270; Nenhum serviço encontrado para esse endereço</div>
+
+<!-- Painel de Estatísticas -->
+<div id="painel-stats">
+    <h3>
+        &#128202; Estatísticas
+        <button onclick="toggleStats()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.9rem;">✕</button>
+    </h3>
+
+    <!-- Totais -->
+    <div class="stats-totais">
+        <div class="stats-total-card">
+            <div class="val val-total" id="st-total">—</div>
+            <div class="label">Total</div>
+        </div>
+        <div class="stats-total-card">
+            <div class="val val-feito" id="st-feitos">—</div>
+            <div class="label">Feitos</div>
+        </div>
+        <div class="stats-total-card">
+            <div class="val val-pend" id="st-pend">—</div>
+            <div class="label">Pendentes</div>
+        </div>
+    </div>
+
+    <!-- Por Fonte -->
+    <div class="stats-secao">
+        <div class="stats-secao-titulo">Por Fonte</div>
+        <div id="st-fontes"></div>
+    </div>
+
+    <!-- Por Tipo de Serviço -->
+    <div class="stats-secao">
+        <div class="stats-secao-titulo">Top Tipos de Serviço</div>
+        <div id="st-tipos"></div>
+    </div>
+
+    <!-- Por Regional (Programação) -->
+    <div class="stats-secao">
+        <div class="stats-secao-titulo">Por Regional — Programação</div>
+        <div id="st-regionais"></div>
+    </div>
+</div>
+
+<!-- Painel traçado de rota -->
+<div id="painel-rota">
+    <h4>&#128205; Traçado do Setor</h4>
+    <div id="painel-rota-setor" class="setor-badge"></div>
+    <div id="painel-rota-tipo" style="font-weight:600;color:#e8f0ee;margin-bottom:6px;font-size:0.8rem;"></div>
+    <ul id="painel-rota-logs"></ul>
+    <button class="btn-fechar" onclick="limparRota()">✕ Fechar traçado</button>
+</div>
+
+<!-- Legenda -->
+<div class="legenda" id="legenda">
+    <h4>Legenda</h4>
+    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:4px;font-weight:700;">STATUS</div>
+    <div class="legenda-status">
+        <span class="badge-feito">✓ Feito</span>
+        <span class="badge-pend">⚡ Pend.</span>
+    </div>
+    <div style="border-top:1px solid var(--borda);margin:7px 0 6px;"></div>
+    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:4px;font-weight:700;">FONTES</div>
+    <div id="legendaFontes"></div>
+    <div style="border-top:1px solid var(--borda);margin:7px 0 6px;"></div>
+    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:4px;font-weight:700;">PROGRAMAÇÃO</div>
+    <div class="legenda-item">
+        <div class="dot" style="background:#7c3aed;border-radius:2px;transform:rotate(45deg);"></div>
+        Com datas agendadas
+    </div>
+    <div class="legenda-item">
+        <div class="dot" style="background:#9ca3af;border-radius:2px;transform:rotate(45deg);"></div>
+        Sem datas futuras
+    </div>
+    <div style="border-top:1px solid var(--borda);margin:7px 0 6px;"></div>
+    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:4px;font-weight:700;">REGIONAIS</div>
+    <div class="legenda-item"><div class="dot" style="background:#3b82f6;border-radius:2px;"></div> Ipiranga</div>
+    <div class="legenda-item"><div class="dot" style="background:#22c55e;border-radius:2px;"></div> Jabaquara</div>
+    <div class="legenda-item"><div class="dot" style="background:#f97316;border-radius:2px;"></div> Cidade Ademar</div>
+</div>
+
+<div id="loading">Carregando dados...</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+
+<script>
+    const CORES_FONTE = {{ cores_fonte|safe }};
+    const COR_PADRAO  = '{{ cor_padrao }}';
+    const STATUS_POR_FONTE = {{ status_por_fonte_json|safe }};
+
+    // Atualiza o dropdown de status conforme a fonte selecionada
+    function filtrarStatusPorFonte() {
+        const fonte  = document.getElementById('filtroFonte').value;
+        const sel    = document.getElementById('filtroStatus');
+        const atual  = sel.value;
+
+        // Monta lista: se fonte selecionada, usa só os status dela; senão mostra todos
+        let lista = [];
+        if (fonte && STATUS_POR_FONTE[fonte]) {
+            lista = STATUS_POR_FONTE[fonte];
+        } else {
+            // Todos os status únicos de todas as fontes
+            const set = new Set();
+            Object.values(STATUS_POR_FONTE).forEach(arr => arr.forEach(s => set.add(s)));
+            lista = Array.from(set).sort();
+        }
+
+        sel.innerHTML = '<option value="">Todos os Status</option>';
+        lista.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s;
+            opt.textContent = s;
+            if (s === atual) opt.selected = true;
+            sel.appendChild(opt);
+        });
+    }
+
+    function corFonte(fonte) { return CORES_FONTE[fonte] || COR_PADRAO; }
+
+    // Legenda de fontes
+    (function() {
+        const div = document.getElementById('legendaFontes');
+        Object.entries(CORES_FONTE).forEach(([nome, cor]) => {
+            div.innerHTML += `<div class="legenda-item"><div class="dot" style="background:${cor}"></div> ${nome}</div>`;
+        });
+    })();
+
+    // ── Mapa ──────────────────────────────────────────────────────
+    const mapa = L.map('mapa').setView([-23.55, -46.63], 11);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 19,
+    }).addTo(mapa);
+
+    // Regionais
+    fetch('/api/regioes/')
+        .then(r => r.json())
+        .then(geojson => {
+            L.geoJSON(geojson, {
+                style: f => ({
+                    color: f.properties.cor, weight: 2.5, opacity: 0.9,
+                    fillColor: f.properties.cor, fillOpacity: 0.06, dashArray: '6 4',
+                }),
+                onEachFeature: (feature, layer) => {
+                    layer.bindTooltip(
+                        `<span style="color:${feature.properties.cor}">&#9632;</span> ${feature.properties.nome}`,
+                        { sticky: true, className: 'tooltip-regional' }
+                    );
+                    layer.on('mouseover', () => layer.setStyle({ fillOpacity: 0.15, weight: 3.5 }));
+                    layer.on('mouseout',  () => layer.setStyle({ fillOpacity: 0.06, weight: 2.5 }));
+                }
+            }).addTo(mapa);
+        })
+        .catch(() => {});
+
+    let heatLayer = null, clusterServicos = null;
+    let clusterProgramados = null, clusterProgramacao = null;
+    let _buscaTimer = null;
+
+    // ── Status ────────────────────────────────────────────────────
+    function eFeito(status, data_execucao, data_finalizacao) {
+        if (data_finalizacao && data_finalizacao.trim()) return true;
+        if (data_execucao   && data_execucao.trim()   ) return true;
+        return /finaliz|execut|conclu|realiz/i.test(status || '');
+    }
+
+    function criarIconeServico(quantidade, servicos) {
+        const feitos   = servicos.filter(s => eFeito(s.status, s.data, s.data_finalizacao)).length;
+        const pendentes = quantidade - feitos;
+        let bg, label, borda;
+        if (feitos > 0 && pendentes > 0) {
+            bg    = 'linear-gradient(135deg, #2e8b57 50%, #C16A42 50%)';
+            label = `<span style="font-size:0.58rem;line-height:1.1;display:block">${feitos}✓</span><span style="font-size:0.58rem;line-height:1.1;display:block">${pendentes}⚡</span>`;
+            borda = '#fff';
+        } else if (feitos > 0) {
+            bg    = '#2e8b57'; label = `<span style="font-size:0.72rem">✓${quantidade}</span>`; borda = '#a8f0c8';
+        } else {
+            bg    = '#C16A42'; label = `<span style="font-size:0.72rem">⚡${quantidade}</span>`; borda = '#ffd5b0';
+        }
+        const tam = (feitos > 0 && pendentes > 0) ? 32 : 28;
+        return L.divIcon({
+            html: `<div style="background:${bg};color:#fff;border-radius:50%;width:${tam}px;height:${tam}px;display:flex;align-items:center;justify-content:center;flex-direction:column;font-weight:700;border:2px solid ${borda};box-shadow:0 2px 6px rgba(0,0,0,0.35);">${label}</div>`,
+            iconSize: [tam, tam], className: '', iconAnchor: [tam/2, tam/2],
+        });
+    }
+
+    // ── Controles de datas / prog ─────────────────────────────────
+    function mostrarDataProg() {
+        const checked = document.getElementById('toggleProgramacao').checked;
+        const inp = document.getElementById('dataProgramacao');
+        inp.style.display = checked ? 'block' : 'none';
+        if (!checked) {
+            inp.value = '';
+            document.getElementById('btnLimparData').style.display = 'none';
+            document.getElementById('badge-data-prog').style.display = 'none';
+        }
+    }
+
+    function atualizarBadgeData() {
+        const val   = document.getElementById('dataProgramacao').value;
+        const badge = document.getElementById('badge-data-prog');
+        const btn   = document.getElementById('btnLimparData');
+        if (val) {
+            const [y, m, d] = val.split('-');
+            badge.textContent = `${d}/${m}/${y}`;
+            badge.style.display = 'inline';
+            btn.style.display = 'inline';
+        } else {
+            badge.style.display = 'none';
+            btn.style.display   = 'none';
+        }
+    }
+
+    function limparDataProg() {
+        document.getElementById('dataProgramacao').value = '';
+        atualizarBadgeData();
+        limparRota();
+        carregarProgramacao();
+    }
+
+    // ── Programação ───────────────────────────────────────────────
+    function carregarProgramacao() {
+        const busca = document.getElementById('filtroBusca').value.trim();
+        const data  = document.getElementById('dataProgramacao').value;
+        const url   = `/api/programacao/?busca=${encodeURIComponent(busca)}&data=${encodeURIComponent(data)}`;
+
+        fetch(url)
+            .then(r => r.json())
+            .then(data => renderizarProgramacao(data.setores))
+            .catch(() => {});
+    }
+
+    function renderizarProgramacao(setores) {
+        if (clusterProgramacao) mapa.removeLayer(clusterProgramacao);
+
+        clusterProgramacao = L.markerClusterGroup({
+            iconCreateFunction: cluster => {
+                const count = cluster.getChildCount();
+                return L.divIcon({
+                    html: `<div style="background:#7c3aed;color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.75rem;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.35);">${count}</div>`,
+                    iconSize: [30, 30], className: '',
+                });
+            }
+        });
+
+        // Data de filtro ativa (para destacar no popup)
+        const dataFiltrada = document.getElementById('dataProgramacao').value;
+        let dataFiltradaStr = '';
+        if (dataFiltrada) {
+            const [y, m, d] = dataFiltrada.split('-');
+            dataFiltradaStr = `${d}/${m}/${y}`;
+        }
+
+        setores.forEach(s => {
+            const temDatas = s.proximas_datas && s.proximas_datas.length > 0;
+            const corIcon  = dataFiltradaStr ? '#C16A42' : (temDatas ? '#7c3aed' : '#9ca3af');
+
+            const icon = L.divIcon({
+                html: `<div style="background:${corIcon};color:white;border-radius:4px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:0.6rem;border:2px solid white;transform:rotate(45deg);box-shadow:0 2px 4px rgba(0,0,0,0.3)"><span style="transform:rotate(-45deg)">P</span></div>`,
+                iconSize: [20, 20], className: '',
+            });
+
+            let datasHtml = '';
+            if (temDatas) {
+                const hoje = new Date();
+                datasHtml = s.proximas_datas.map((d, i) => {
+                    const partes = d.split('/');
+                    const dt   = new Date(partes[2], partes[1]-1, partes[0]);
+                    const diff = Math.round((dt - hoje) / 86400000);
+                    const cls  = (d === dataFiltradaStr) ? 'destacada' : (i === 0 ? 'proxima' : '');
+                    const label = (i === 0 && d !== dataFiltradaStr)
+                        ? ` <small>(${diff >= 0 ? diff + 'd' : 'vencida'})</small>` : '';
+                    return `<span class="popup-prog-data-item ${cls}">${d}${label}</span>`;
+                }).join('');
+            } else {
+                datasHtml = '<span class="popup-prog-sem-data">Sem datas agendadas</span>';
+            }
+
+            const localHtml = s.nome_local
+                ? `<div class="popup-prog-info"><b>Local:</b> ${s.nome_local}</div>` : '';
+
+            const popup = `
+                <div class="popup-prog-titulo">&#128203; ${s.tipo}</div>
+                <span class="popup-prog-setor">${s.setor}</span>
+                <div class="popup-prog-info"><b>Subprefeitura:</b> ${s.subprefeitura}</div>
+                <div class="popup-prog-info"><b>Logradouro:</b> ${s.logradouro}</div>
+                ${localHtml}
+                <div class="popup-prog-info"><b>Horário:</b> ${s.horario}</div>
+                <div class="popup-prog-info"><b>Vigência:</b> ${s.data_inicio} – ${s.data_fim}</div>
+                <div class="popup-prog-info"><b>Equipe:</b> ${s.qtd_operadores} op. / ${s.qtd_veiculos} veíc.</div>
+                <div class="popup-prog-datas">
+                    <div class="label">&#128197; DATAS AGENDADAS</div>
+                    ${datasHtml}
+                </div>
+                <button class="btn-ver-rota"
+                    onclick="verRota('${s.setor}', '${s.tipo.replace(/'/g,"\\'")}', '${corIcon}'); this.classList.toggle('ativo');">
+                    &#128205; Ver ruas do setor
+                </button>
+            `;
+
+            const marker = L.marker([s.lat, s.lng], { icon });
+            marker.bindPopup(popup, { maxWidth: 310 });
+            marker.addTo(clusterProgramacao);
+
+            if (s.busca_logradouro) {
+                marker.on('add', () => setTimeout(() => {
+                    marker.openPopup();
+                    verRota(s.setor, s.tipo, corIcon);
+                }, 400));
+            }
+        });
+
+        const busca  = document.getElementById('filtroBusca').value.trim();
+        const toggle = document.getElementById('toggleProgramacao');
+        if (busca && setores.length > 0) toggle.checked = true;
+        if (toggle.checked) clusterProgramacao.addTo(mapa);
+
+        // Se há filtro por data: desenha TODOS os traçados do dia automaticamente
+        const dataISO = document.getElementById('dataProgramacao').value;
+        if (dataISO && setores.length > 0) {
+            verRotasDodia(dataISO);
+        } else if (!dataISO) {
+            limparRota();
+        }
+    }
+
+    // ── Traçado de setor(es) ──────────────────────────────────────
+    let layersRota = [], setorAtivo = null;
+
+    // Paleta de cores para distinguir múltiplos setores no mesmo dia
+    const CORES_ROTA = [
+        '#C16A42','#7c3aed','#2e8b57','#3b82f6','#f59e0b',
+        '#ec4899','#06b6d4','#84cc16','#f97316','#8b5cf6',
+    ];
+
+    function verRota(setor, tipo, cor) {
+        if (setorAtivo === setor) { limparRota(); return; }
+        limparRota();
+        _desenharRota(setor, tipo, cor || '#7c3aed', true);
+    }
+
+    // Desenha rota de um setor. Se centralizar=true, faz fitBounds no final.
+    // Se acumular=true, não limpa rotas existentes (para modo dia completo).
+    function _desenharRota(setor, tipo, cor, centralizar, acumular) {
+        if (!acumular && setorAtivo === setor) return;  // evita duplicata
+        fetch(`/api/programacao/setor/${encodeURIComponent(setor)}/`)
+            .then(r => r.json())
+            .then(data => {
+                if (!data.segmentos || data.segmentos.length === 0) return;
+                if (!acumular) setorAtivo = setor;
+                const bounds = [];
+                data.segmentos.forEach((seg, idx) => {
+                    if (seg.coords.length < 2) return;
+                    const linha = L.polyline(seg.coords, {
+                        color: cor, weight: 4,
+                        opacity: idx % 2 === 0 ? 0.85 : 0.65,
+                        lineJoin: 'round', lineCap: 'round',
+                    });
+                    if (seg.logradouro) {
+                        linha.bindTooltip(`<b style="color:${cor}">${setor}</b> — ${seg.logradouro}`, {
+                            permanent: false, sticky: true,
+                            direction: 'top', className: 'tooltip-rua',
+                        });
+                    }
+                    linha.addTo(mapa);
+                    layersRota.push(linha);
+                    seg.coords.forEach(c => bounds.push(c));
+                });
+                if (centralizar && bounds.length > 0) {
+                    mapa.fitBounds(bounds, { padding: [50, 50] });
+                }
+            })
+            .catch(() => {});
+    }
+
+    // Desenha TODOS os traçados dos setores do dia — uma única chamada à API
+    function verRotasDodia(dataISO) {
+        limparRota();
+        if (!dataISO) return;
+
+        fetch(`/api/programacao/dia/${dataISO}/`)
+            .then(r => r.json())
+            .then(resp => {
+                const setores   = resp.setores || [];
+                const allBounds = [];
+                const lista     = [];
+
+                setores.forEach((s, idx) => {
+                    const cor = CORES_ROTA[idx % CORES_ROTA.length];
+
+                    s.segmentos.forEach((seg, i) => {
+                        if (!seg.coords || seg.coords.length < 2) return;
+                        const linha = L.polyline(seg.coords, {
+                            color:   cor,
+                            weight:  4,
+                            opacity: i % 2 === 0 ? 0.88 : 0.65,
+                            lineJoin: 'round', lineCap: 'round',
+                        });
+                        if (seg.logradouro) {
+                            linha.bindTooltip(
+                                `<b style="color:${cor}">${s.setor}</b> · ${s.tipo}<br>${seg.logradouro}`,
+                                { permanent: false, sticky: true, direction: 'top', className: 'tooltip-rua' }
+                            );
+                        }
+                        linha.addTo(mapa);
+                        layersRota.push(linha);
+                        seg.coords.forEach(c => allBounds.push(c));
+                    });
+
+                    lista.push({ setor: s.setor, tipo: s.tipo, cor });
+                });
+
+                if (allBounds.length > 0) {
+                    mapa.fitBounds(allBounds, { padding: [40, 40] });
+                }
+                if (lista.length > 0) {
+                    _atualizarPainelDia(lista);
+                }
+            })
+            .catch(() => {});
+    }
+
+    function _atualizarPainelDia(lista) {
+        const painel = document.getElementById('painel-rota');
+        const ul     = document.getElementById('painel-rota-logs');
+        document.getElementById('painel-rota-setor').textContent = `${lista.length} setor(es)`;
+        document.getElementById('painel-rota-tipo').textContent  = document.getElementById('badge-data-prog').textContent;
+        ul.innerHTML = lista.map(s =>
+            `<li><span style="color:${s.cor}">&#9679;</span> <b>${s.setor}</b> — ${s.tipo}</li>`
+        ).join('');
+        painel.style.display = 'block';
+    }
+
+    function limparRota() {
+        layersRota.forEach(l => mapa.removeLayer(l));
+        layersRota = []; setorAtivo = null;
+        document.getElementById('painel-rota').style.display = 'none';
+    }
+
+    function toggleCamadaProgramacao() {
+        if (!clusterProgramacao) return;
+        if (document.getElementById('toggleProgramacao').checked) {
+            clusterProgramacao.addTo(mapa);
+        } else {
+            mapa.removeLayer(clusterProgramacao);
+        }
+    }
+
+    // ── Dados principais ─────────────────────────────────────────
+    function agendarBusca() {
+        clearTimeout(_buscaTimer);
+        _buscaTimer = setTimeout(() => { carregarDados(); carregarProgramacao(); carregarStats(); }, 500);
+    }
+
+    function atualizarBtnExportar() {
+        const params = new URLSearchParams();
+        const tipo      = document.getElementById('filtroTipo').value;
+        const status    = document.getElementById('filtroStatus').value;
+        const fonte     = document.getElementById('filtroFonte').value;
+        const busca     = document.getElementById('filtroBusca').value.trim();
+        const mes       = document.getElementById('filtroMes').value;
+        const resolucao = document.getElementById('filtroResolucao').value;
+        if (tipo)      params.set('tipo', tipo);
+        if (status)    params.set('status', status);
+        if (fonte)     params.set('fonte', fonte);
+        if (busca)     params.set('busca', busca);
+        if (mes)       params.set('mes', mes);
+        if (resolucao) params.set('resolucao', resolucao);
+        const qs = params.toString();
+        document.getElementById('btnExportar').href = '/exportar/' + (qs ? '?' + qs : '');
+    }
+
+    function carregarDados() {
+        const tipo      = document.getElementById('filtroTipo').value;
+        const status    = document.getElementById('filtroStatus').value;
+        const fonte     = document.getElementById('filtroFonte').value;
+        const busca     = document.getElementById('filtroBusca').value.trim();
+        const mes       = document.getElementById('filtroMes').value;
+        const resolucao = document.getElementById('filtroResolucao').value;
+
+        atualizarBtnExportar();
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('aviso-sem-resultado').style.display = 'none';
+
+        const url = `/api/dados/?tipo=${encodeURIComponent(tipo)}&status=${encodeURIComponent(status)}&fonte=${encodeURIComponent(fonte)}&busca=${encodeURIComponent(busca)}&mes=${encodeURIComponent(mes)}&resolucao=${encodeURIComponent(resolucao)}`;
+
+        fetch(url)
+            .then(r => r.json())
+            .then(data => {
+                if (busca && data.pontos.length === 0) {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('aviso-sem-resultado').style.display = 'block';
+                    setTimeout(() => {
+                        document.getElementById('aviso-sem-resultado').style.display = 'none';
+                    }, 4000);
+                    return;
+                }
+                renderizarMapa(data);
+                document.getElementById('loading').style.display = 'none';
+            })
+            .catch(() => {
+                document.getElementById('loading').style.display = 'none';
+                alert('Erro ao carregar dados.');
+            });
+    }
+
+    function renderizarMapa(data) {
+        if (heatLayer)          mapa.removeLayer(heatLayer);
+        if (clusterServicos)    mapa.removeLayer(clusterServicos);
+        if (clusterProgramados) mapa.removeLayer(clusterProgramados);
+
+        const pontos      = data.pontos;
+        const programados = data.programados;
+
+        const heatData = pontos.map(p => [p.lat, p.lng, Math.min(p.quantidade / 5, 1.0)]);
+        heatLayer = L.heatLayer(heatData, {
+            radius: 35, blur: 25, maxZoom: 17,
+            gradient: { 0.2: 'blue', 0.5: 'yellow', 0.8: 'orange', 1.0: 'red' },
+        }).addTo(mapa);
+
+        clusterServicos = L.markerClusterGroup({
+            disableClusteringAtZoom: 16,
+            iconCreateFunction: cluster => {
+                const count = cluster.getChildCount();
+                return L.divIcon({
+                    html: `<div style="background:linear-gradient(135deg,#2e8b57,#C16A42);color:white;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.78rem;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.4);">${count}</div>`,
+                    iconSize: [34, 34], className: '',
+                });
+            }
+        });
+
+        pontos.forEach(p => {
+            const icon = criarIconeServico(p.quantidade, p.servicos);
+            const feitos    = p.servicos.filter(s => eFeito(s.status, s.data, s.data_finalizacao)).length;
+            const pendentes = p.servicos.length - feitos;
+            const resumoHtml = `
+                <div class="popup-resumo">
+                    <span class="badge-feito">✓ ${feitos} Feito${feitos !== 1 ? 's' : ''}</span>
+                    <span class="badge-pend">⚡ ${pendentes} Pend.</span>
+                </div>`;
+
+            const servicosHtml = p.servicos.slice(0, 8).map(s => {
+                const cS    = corFonte(s.fonte);
+                const feito = eFeito(s.status, s.data, s.data_finalizacao);
+                const finalizacaoHtml = s.data_finalizacao
+                    ? `<br><small style="color:#6fcf97">✓ Fin: ${s.data_finalizacao}</small>` : '';
+                const fiscalHtml = s.fiscal
+                    ? `<br><small style="color:#a8c4bc">👤 ${s.fiscal}</small>` : '';
+                return `<div class="popup-servico" style="border-left-color:${feito ? '#2e8b57' : '#C16A42'}">
+                    <span class="tipo">${s.tipo}</span><br>
+                    <span class="${feito ? 'status-feito' : 'status-pend'}">${feito ? '✓' : '⚡'} ${s.status}</span>
+                    <span class="data"> | ${s.data || '-'}</span>
+                    ${s.os ? `<br><small style="color:#a8c4bc">OS: ${s.os}</small>` : ''}
+                    ${finalizacaoHtml}${fiscalHtml}
+                    <br><span class="fonte-tag" style="background:${cS}">${s.fonte}</span>
+                </div>`;
+            }).join('');
+
+            const mais = p.servicos.length > 8
+                ? `<small style="color:#a8c4bc">+${p.servicos.length - 8} serviços...</small>` : '';
+
+            const popup = `
+                <div class="popup-titulo">&#128205; ${p.quantidade} serviço(s)</div>
+                <div class="popup-endereco">${p.endereco}</div>
+                ${resumoHtml}
+                <span class="popup-fonte-badge" style="background:${corFonte(p.fonte)}">${p.fonte}</span>
+                ${servicosHtml}${mais}
+            `;
+
+            L.marker([p.lat, p.lng], { icon })
+                .bindPopup(popup, { maxWidth: 300, maxHeight: 340 })
+                .addTo(clusterServicos);
+        });
+
+        clusterServicos.addTo(mapa);
+
+        clusterProgramados = L.markerClusterGroup();
+        programados.forEach(c => {
+            const icon = L.divIcon({
+                html: `<div style="background:#2E4E46;color:#e8f0ee;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;border:2px dashed #a8c4bc;font-weight:700;">P</div>`,
+                iconSize: [22, 22], className: '',
+            });
+            const popup = `
+                <div class="popup-titulo">&#128197; Consulta Programada</div>
+                <div class="popup-endereco">${c.endereco}</div>
+                <div class="popup-servico" style="border-left-color:#a8c4bc">
+                    <span class="tipo">${c.tipo}</span><br>
+                    <span style="color:#a8c4bc">Data: ${c.data_programada}</span>
+                    ${c.observacao ? `<br><small style="color:#a8c4bc">${c.observacao}</small>` : ''}
+                </div>`;
+            L.marker([c.lat, c.lng], { icon })
+                .bindPopup(popup, { maxWidth: 260 })
+                .addTo(clusterProgramados);
+        });
+
+        clusterProgramados.addTo(mapa);
+
+        if (pontos.length > 0) {
+            const todos = [
+                ...pontos.map(p => [p.lat, p.lng]),
+                ...programados.map(c => [c.lat, c.lng]),
+            ];
+            mapa.fitBounds(todos, { padding: [40, 40] });
+        }
+
+        // Atualiza contador no header
+        document.getElementById('qtdServicos').textContent = pontos.reduce((a, p) => a + p.quantidade, 0);
+    }
+
+    // ── Estatísticas ──────────────────────────────────────────────
+    function carregarStats() {
+        const tipo      = document.getElementById('filtroTipo').value;
+        const status    = document.getElementById('filtroStatus').value;
+        const fonte     = document.getElementById('filtroFonte').value;
+        const busca     = document.getElementById('filtroBusca').value.trim();
+        const mes       = document.getElementById('filtroMes').value;
+        const resolucao = document.getElementById('filtroResolucao').value;
+
+        const url = `/api/stats/?tipo=${encodeURIComponent(tipo)}&status=${encodeURIComponent(status)}&fonte=${encodeURIComponent(fonte)}&busca=${encodeURIComponent(busca)}&mes=${encodeURIComponent(mes)}&resolucao=${encodeURIComponent(resolucao)}`;
+
+        fetch(url)
+            .then(r => r.json())
+            .then(renderizarStats)
+            .catch(() => {});
+    }
+
+    function renderizarStats(data) {
+        // Totais
+        document.getElementById('st-total').textContent  = data.total.toLocaleString('pt-BR');
+        document.getElementById('st-feitos').textContent = data.feitos.toLocaleString('pt-BR');
+        document.getElementById('st-pend').textContent   = data.pendentes.toLocaleString('pt-BR');
+
+        // Por fonte
+        const divFontes = document.getElementById('st-fontes');
+        const maxFonte  = Math.max(...data.por_fonte.map(f => f.total), 1);
+        divFontes.innerHTML = data.por_fonte.map(f => {
+            const cor   = CORES_FONTE[f.fonte] || COR_PADRAO;
+            const pct   = Math.round((f.total / maxFonte) * 100);
+            return `<div class="bar-item">
+                <div class="bar-header">
+                    <span class="bar-nome" style="color:${cor}">&#9679; ${f.fonte}</span>
+                    <span class="bar-val">${f.total.toLocaleString('pt-BR')}</span>
+                </div>
+                <div class="bar-track">
+                    <div class="bar-fill" style="width:${pct}%;background:${cor}"></div>
+                </div>
+            </div>`;
+        }).join('');
+
+        // Por tipo
+        const divTipos = document.getElementById('st-tipos');
+        const maxTipo  = Math.max(...data.por_tipo.map(t => t.total), 1);
+        divTipos.innerHTML = data.por_tipo.map(t => {
+            const pct = Math.round((t.total / maxTipo) * 100);
+            const nome = t.tipo_servico || 'Não informado';
+            return `<div class="bar-item">
+                <div class="bar-header">
+                    <span class="bar-nome">${nome}</span>
+                    <span class="bar-val">${t.total.toLocaleString('pt-BR')}</span>
+                </div>
+                <div class="bar-track">
+                    <div class="bar-fill" style="width:${pct}%;background:var(--laranja)"></div>
+                </div>
+            </div>`;
+        }).join('') || '<span style="color:var(--muted);font-size:0.76rem">Sem dados</span>';
+
+        // Por regional
+        const divReg = document.getElementById('st-regionais');
+        const CORES_REG = { 'Ipiranga': '#3b82f6', 'Jabaquara': '#22c55e', 'Cidade Ademar': '#f97316' };
+        divReg.innerHTML = data.por_regional.map(r => {
+            const cor = CORES_REG[r.subprefeitura] || 'var(--muted)';
+            return `<div class="regional-card">
+                <div class="regional-nome" style="color:${cor}">&#9632; ${r.subprefeitura}</div>
+                <div class="regional-badges">
+                    <span class="badge-regional badge-setores">${r.setores} setor${r.setores !== 1 ? 'es' : ''}</span>
+                    <span class="badge-regional badge-pontos">${r.pontos} pontos</span>
+                </div>
+            </div>`;
+        }).join('') || '<span style="color:var(--muted);font-size:0.76rem">Sem dados de programação</span>';
+    }
+
+    function toggleStats() {
+        const painel = document.getElementById('painel-stats');
+        const btn    = document.getElementById('btnStats');
+        const aberto = painel.style.display === 'block';
+        painel.style.display = aberto ? 'none' : 'block';
+        btn.classList.toggle('ativo', !aberto);
+        if (!aberto) carregarStats();
+    }
+
+    // ── Limpar filtros ────────────────────────────────────────────
+    function limparFiltros() {
+        document.getElementById('filtroBusca').value = '';
+        document.getElementById('filtroFonte').value = '';
+        document.getElementById('filtroTipo').value  = '';
+        document.getElementById('filtroStatus').value    = '';
+        document.getElementById('filtroResolucao').value = '';
+        document.getElementById('filtroMes').value       = '';
+        document.getElementById('dataProgramacao').value = '';
+        document.getElementById('aviso-sem-resultado').style.display = 'none';
+        atualizarBadgeData();
+        carregarDados();
+        carregarProgramacao();
+        carregarStats();
+    }
+
+    // ── Init ──────────────────────────────────────────────────────
+    mostrarDataProg();  // garante que o date picker aparece (checkbox já checked)
+    document.getElementById('dataProgramacao').style.display = 'block';
+    carregarDados();
+    carregarProgramacao();
+    carregarStats();
+</script>
+
+</body>
+</html>

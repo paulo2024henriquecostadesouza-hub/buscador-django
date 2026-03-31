@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Importar Relatórios</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --verde:   #2E4E46;
+            --laranja: #C16A42;
+            --fundo:   #1a2e28;
+            --card:    #243d35;
+            --borda:   #3d6055;
+            --claro:   #e8f0ee;
+            --muted:   #a8c4bc;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Rubik', 'Segoe UI', sans-serif; }
+
+        body {
+            background: linear-gradient(160deg, var(--verde) 0%, var(--fundo) 50%, #0f1f1b 100%);
+            color: var(--claro);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── Header ─────────────────────────────────── */
+        header {
+            background: linear-gradient(90deg, var(--verde), var(--laranja));
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+        }
+
+        header h1 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .btn-voltar {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: #fff;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+        .btn-voltar:hover { background: rgba(255,255,255,0.25); }
+
+        /* ── Conteúdo ────────────────────────────────── */
+        .conteudo {
+            flex: 1;
+            padding: 28px 24px;
+            max-width: 760px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* ── Alertas ─────────────────────────────────── */
+        .alert {
+            padding: 10px 16px;
+            border-radius: 8px;
+            margin-bottom: 14px;
+            font-size: 0.88rem;
+            font-weight: 500;
+        }
+        .alert-success {
+            background: rgba(46,139,87,0.2);
+            border-left: 4px solid #2e8b57;
+            color: #7ecba1;
+        }
+        .alert-error {
+            background: rgba(193,106,66,0.2);
+            border-left: 4px solid var(--laranja);
+            color: #f0a070;
+        }
+
+        /* ── Cards ───────────────────────────────────── */
+        .card {
+            background: var(--card);
+            border: 1px solid var(--borda);
+            border-radius: 10px;
+            padding: 22px 24px;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: var(--claro);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--laranja);
+            flex-shrink: 0;
+        }
+        .card-title .dot-verde { background: #2e8b57; }
+        .card-title .dot-auto  { background: var(--laranja); }
+
+        /* ── Dica ────────────────────────────────────── */
+        .dica {
+            background: rgba(255,255,255,0.05);
+            border-left: 3px solid var(--borda);
+            padding: 9px 13px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+        .dica strong { color: var(--claro); }
+
+        /* ── Formulário ──────────────────────────────── */
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--muted);
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        select, input[type=file], input[type=text] {
+            width: 100%;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid var(--borda);
+            color: var(--claro);
+            padding: 8px 12px;
+            border-radius: 7px;
+            margin-bottom: 14px;
+            font-size: 0.88rem;
+            font-family: 'Rubik', sans-serif;
+            transition: border-color 0.2s;
+        }
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--laranja);
+        }
+        select option { background: var(--fundo); color: var(--claro); }
+
+        input[type=file] { cursor: pointer; }
+
+        input[type=text] { width: auto; }
+
+        /* ── Botões ──────────────────────────────────── */
+        .btn {
+            display: inline-block;
+            border: none;
+            padding: 9px 22px;
+            border-radius: 7px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Rubik', sans-serif;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+        .btn:hover { opacity: 0.88; }
+        .btn:active { transform: scale(0.98); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-laranja  { background: linear-gradient(90deg, var(--verde), var(--laranja)); color: #fff; }
+        .btn-verde    { background: #2e8b57; color: #fff; }
+        .btn-auto     { background: linear-gradient(90deg, #2E4E46, #C16A42); color: #fff; width: 100%; padding: 11px; }
+
+        /* ── Badges de fonte ─────────────────────────── */
+        .badge-fonte {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 2px 7px;
+            border-radius: 6px;
+            color: #fff;
+            margin: 2px 2px 0 0;
+        }
+
+        /* ── Checkbox ────────────────────────────────── */
+        .check-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.82rem;
+            color: var(--muted);
+            cursor: pointer;
+            margin-bottom: 14px;
+        }
+        .check-label input[type=checkbox] {
+            width: auto;
+            margin: 0;
+            accent-color: var(--laranja);
+        }
+
+        /* ── Tabela histórico ────────────────────────── */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+        }
+        th {
+            color: var(--muted);
+            text-align: left;
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--borda);
+            font-weight: 500;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        td {
+            padding: 8px 10px;
+            border-bottom: 1px solid rgba(61,96,85,0.4);
+            color: var(--claro);
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: rgba(255,255,255,0.03); }
+    </style>
+</head>
+<body>
+
+<header>
+    <a href="{% url 'mapa:index' %}" class="btn-voltar">← Mapa</a>
+    <h1>Importar Relatórios</h1>
+</header>
+
+<div class="conteudo">
+
+    {% for msg in messages %}
+        {% if msg.tags == 'success' %}
+            <div class="alert alert-success">✓ {{ msg }}</div>
+        {% else %}
+            <div class="alert alert-error">✗ {{ msg }}</div>
+        {% endif %}
+    {% endfor %}
+
+    <!-- Enviar Arquivo -->
+    <div class="card">
+        <div class="card-title">
+            <span class="dot"></span>
+            Enviar Arquivo
+        </div>
+        <div class="dica">
+            Formatos aceitos: <strong>.xlsx, .xls, .csv</strong><br>
+            <strong>Relatório Flip:</strong> colunas com OS, tipo de serviço, status, endereço, datas.<br>
+            <strong>Consultas Programadas:</strong> colunas com endereço, tipo, data programada.
+        </div>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <label>Tipo de importação</label>
+            <select name="tipo">
+                <option value="relatorio">Relatório Flip (serviços)</option>
+                <option value="programados">Consultas Programadas</option>
+            </select>
+            <label>Arquivo (.xlsx / .xls / .csv)</label>
+            <input type="file" name="arquivo" accept=".xlsx,.xls,.csv" required>
+            <button type="submit" class="btn btn-laranja">Importar</button>
+        </form>
+    </div>
+
+    <!-- Atualizar Flip Automaticamente -->
+    <div class="card" style="border-color: var(--laranja);">
+        <div class="card-title">
+            <span class="dot dot-auto"></span>
+            Atualizar Flip Automaticamente
+        </div>
+        <div class="dica" style="border-color: var(--laranja);">
+            Abre o Chrome, entra no <strong>Selimp</strong>, baixa os relatórios de todas as fontes e importa direto no banco.<br>
+            <small>Fontes:
+                <span class="badge-fonte" style="background:#4fc3f7">SAC</span>
+                <span class="badge-fonte" style="background:#81c784">OUVIDORIA</span>
+                <span class="badge-fonte" style="background:#ff8a65">ACIC</span>
+                <span class="badge-fonte" style="background:#ffd54f; color:#333">BFS</span>
+                <span class="badge-fonte" style="background:#ce93d8; color:#333">CNC</span>
+            </small>
+        </div>
+        <form method="post" action="{% url 'mapa:atualizar_flip' %}"
+              onsubmit="this.querySelector('.btn-auto').textContent='Iniciando...'; this.querySelector('.btn-auto').disabled=true;">
+            {% csrf_token %}
+            <label>Data de início do período</label>
+            <input type="text" name="data_inicio" value="01/04/2025"
+                   style="width:160px; margin-bottom:12px;">
+            <label class="check-label">
+                <input type="checkbox" name="sem_limpar" value="1">
+                Acumular (não apagar dados existentes)
+            </label>
+            <button type="submit" class="btn btn-auto">&#9654; Baixar e Importar Agora</button>
+        </form>
+    </div>
+
+    <!-- Reimportar Pasta Flip -->
+    <div class="card" style="border-color: #2e8b57;">
+        <div class="card-title">
+            <span class="dot dot-verde"></span>
+            Reimportar Pasta Flip
+        </div>
+        <div class="dica" style="border-color: #2e8b57;">
+            Lê todos os arquivos da pasta <strong>Flip/</strong> do projeto, apaga os dados atuais e reimporta com encoding correto.<br>
+            <small>Use isso para corrigir caracteres especiais, incluir SAC/OUVIDORIA ou adicionar novos arquivos à pasta.</small>
+        </div>
+        <form method="post" action="{% url 'mapa:reimportar_pasta' %}"
+              onsubmit="return confirm('Isso vai apagar todos os serviços existentes e reimportar da pasta Flip. Continuar?')">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-verde">Limpar e Reimportar Pasta Flip</button>
+        </form>
+    </div>
+
+    <!-- Histórico -->
+    {% if historico %}
+    <div class="card">
+        <div class="card-title">
+            <span class="dot" style="background: var(--muted);"></span>
+            Últimas Importações
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Arquivo</th>
+                    <th>Tipo</th>
+                    <th>Registros</th>
+                    <th>Data</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for imp in historico %}
+                <tr>
+                    <td>{{ imp.arquivo_nome }}</td>
+                    <td>{{ imp.get_tipo_display }}</td>
+                    <td>{{ imp.total_registros }}</td>
+                    <td>{{ imp.importado_em|date:"d/m/Y H:i" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+</div>
+</body>
+</html>
