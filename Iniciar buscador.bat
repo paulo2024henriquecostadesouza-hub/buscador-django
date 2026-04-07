@@ -33,7 +33,7 @@ echo.
 echo  Buscador de Servicos - ON
 echo  Acesse: http://10.1.1.27:8507
 echo.
-python manage.py runserver 0.0.0.0:8507 --noreload
+python manage.py runserver 0.0.0.0:8507
 
 popd
 pause

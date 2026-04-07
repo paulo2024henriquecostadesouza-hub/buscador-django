@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Manual do Sistema — Buscador de Serviços</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --verde:  #2E4E46;
+    --laranja:#C16A42;
+    --fundo:  #1a2e28;
+    --card:   #243d35;
+    --borda:  #3d6055;
+    --claro:  #e8f0ee;
+    --muted:  #a8c4bc;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Rubik', 'Segoe UI', sans-serif;
+    font-size: 11pt;
+    color: #1a1a1a;
+    background: #fff;
+    line-height: 1.6;
+  }
+
+  /* ── CAPA ── */
+  .capa {
+    background: linear-gradient(160deg, #2E4E46 0%, #1a2e28 60%, #0f1f1b 100%);
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 60px 40px;
+    page-break-after: always;
+  }
+  .capa .logo { font-size: 52pt; margin-bottom: 20px; }
+  .capa h1 { font-size: 26pt; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  .capa .subtitulo { font-size: 14pt; color: #a8c4bc; font-weight: 300; margin-bottom: 40px; }
+  .capa .linha { width: 80px; height: 4px; background: #C16A42; margin: 30px auto; border-radius: 2px; }
+  .capa .info { font-size: 10pt; color: #a8c4bc; margin-top: 10px; }
+  .capa .badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 20px;
+    padding: 6px 18px;
+    font-size: 10pt;
+    color: #e8f0ee;
+    margin: 6px;
+  }
+
+  /* ── SUMÁRIO ── */
+  .sumario {
+    padding: 50px 60px;
+    page-break-after: always;
+  }
+  .sumario h2 { font-size: 16pt; color: #2E4E46; margin-bottom: 30px; border-bottom: 3px solid #C16A42; padding-bottom: 10px; }
+  .sumario ol { list-style: none; counter-reset: item; }
+  .sumario ol li {
+    counter-increment: item;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px dotted #ddd;
+    font-size: 11pt;
+  }
+  .sumario ol li::before {
+    content: counter(item) ". ";
+    font-weight: 700;
+    color: #C16A42;
+    margin-right: 8px;
+    min-width: 24px;
+  }
+  .sumario .titulo-item { flex: 1; }
+  .sumario .pag { color: #999; font-size: 10pt; }
+  .sumario .secao { font-weight: 600; color: #2E4E46; font-size: 12pt; margin-top: 16px; margin-bottom: 4px; }
+
+  /* ── PÁGINAS ── */
+  .pagina {
+    padding: 50px 60px;
+    page-break-before: always;
+  }
+  .pagina:first-of-type { page-break-before: auto; }
+
+  /* ── TÍTULOS ── */
+  h2.secao-titulo {
+    font-size: 18pt;
+    font-weight: 700;
+    color: #2E4E46;
+    border-left: 6px solid #C16A42;
+    padding-left: 16px;
+    margin-bottom: 24px;
+    margin-top: 10px;
+  }
+  h3.sub-titulo {
+    font-size: 13pt;
+    font-weight: 600;
+    color: #2E4E46;
+    margin-top: 28px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  h3.sub-titulo::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: #C16A42;
+    border-radius: 50%;
+  }
+
+  /* ── TEXTO ── */
+  p { margin-bottom: 12px; text-align: justify; }
+  ul, ol { padding-left: 24px; margin-bottom: 12px; }
+  li { margin-bottom: 5px; }
+
+  /* ── CARDS ── */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin: 20px 0;
+  }
+  .card-grid-2 { grid-template-columns: repeat(2, 1fr); }
+  .card {
+    background: #f8fffe;
+    border: 1px solid #d0e8e0;
+    border-left: 4px solid #2E4E46;
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .card.laranja { border-left-color: #C16A42; }
+  .card.vermelho { border-left-color: #e94560; }
+  .card .card-num { font-size: 22pt; font-weight: 700; color: #2E4E46; }
+  .card .card-label { font-size: 9pt; color: #666; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+  .card .card-titulo { font-size: 11pt; font-weight: 700; color: #2E4E46; margin-bottom: 6px; }
+  .card p { font-size: 10pt; margin: 0; color: #444; }
+
+  /* ── TABELAS ── */
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 10pt; }
+  th {
+    background: #2E4E46;
+    color: #fff;
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 9.5pt;
+  }
+  td { padding: 9px 12px; border-bottom: 1px solid #e8f0ee; }
+  tr:nth-child(even) td { background: #f4faf8; }
+  tr:hover td { background: #eaf5f0; }
+
+  /* ── DESTAQUE / ALERTA ── */
+  .destaque {
+    background: #f0faf6;
+    border-left: 4px solid #2e8b57;
+    padding: 14px 18px;
+    border-radius: 0 8px 8px 0;
+    margin: 16px 0;
+    font-size: 10.5pt;
+  }
+  .aviso {
+    background: #fff8f0;
+    border-left: 4px solid #C16A42;
+    padding: 14px 18px;
+    border-radius: 0 8px 8px 0;
+    margin: 16px 0;
+    font-size: 10.5pt;
+  }
+  .aviso strong, .destaque strong { color: #2E4E46; }
+
+  /* ── CÓDIGO ── */
+  .cod {
+    background: #1a2e28;
+    color: #a8c4bc;
+    padding: 14px 18px;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 9.5pt;
+    margin: 12px 0;
+    white-space: pre;
+  }
+  .cod-inline {
+    background: #e8f0ee;
+    color: #2E4E46;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 10pt;
+    font-weight: 600;
+  }
+
+  /* ── BADGE DE FONTE ── */
+  .fonte-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 9pt;
+    font-weight: 700;
+    color: #fff;
+    margin: 2px;
+  }
+
+  /* ── FLUXO / STEPS ── */
+  .steps { list-style: none; padding: 0; }
+  .steps li {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 16px;
+    align-items: flex-start;
+  }
+  .step-num {
+    background: #2E4E46;
+    color: #fff;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 10pt;
+    flex-shrink: 0;
+  }
+  .step-conteudo { flex: 1; }
+  .step-conteudo strong { color: #2E4E46; display: block; margin-bottom: 3px; }
+
+  /* ── RODAPÉ ── */
+  @page {
+    margin: 20mm 18mm 22mm 18mm;
+    @bottom-center {
+      content: "Buscador de Serviços — CPLU / CCO  |  Página " counter(page);
+      font-size: 8pt;
+      color: #999;
+    }
+  }
+
+  /* ── IMPRESSÃO ── */
+  @media print {
+    body { font-size: 10.5pt; }
+    .capa { min-height: auto; padding: 80px 60px; }
+    .pagina { padding: 30px 0; page-break-before: always; }
+    .no-break { page-break-inside: avoid; }
+  }
+
+  .divider {
+    border: none;
+    border-top: 2px solid #e8f0ee;
+    margin: 24px 0;
+  }
+
+  .rodape-pagina {
+    margin-top: 40px;
+    padding-top: 12px;
+    border-top: 1px solid #e8f0ee;
+    font-size: 8.5pt;
+    color: #999;
+    display: flex;
+    justify-content: space-between;
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     CAPA
+═══════════════════════════════════════════ -->
+<div class="capa">
+  <div class="logo">🗺️</div>
+  <h1>Buscador de Serviços</h1>
+  <div class="subtitulo">Sistema de Monitoramento e Visualização de Serviços Urbanos</div>
+  <div class="linha"></div>
+  <div>
+    <span class="badge">CPLU — Contrato de Programa de Limpeza Urbana</span>
+    <span class="badge">CCO — Centro de Controle Operacional</span>
+  </div>
+  <div style="margin-top: 40px;">
+    <span class="badge">Django 6.0 · Python 3.14</span>
+    <span class="badge">SQLite · Leaflet.js</span>
+    <span class="badge">Selenium · Automação Flip</span>
+  </div>
+  <div class="info" style="margin-top:50px;">
+    Documentação técnica e manual de uso<br>
+    Prefeitura de São Paulo · Subprefeituras · 2026
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SUMÁRIO
+═══════════════════════════════════════════ -->
+<div class="sumario">
+  <h2>Sumário</h2>
+  <ol>
+    <li class="secao">Visão Geral do Sistema</li>
+    <li><span class="titulo-item">O que é o Buscador de Serviços</span></li>
+    <li><span class="titulo-item">Fontes de dados integradas</span></li>
+    <li><span class="titulo-item">Números atuais do sistema</span></li>
+    <li class="secao">Como Acessar</li>
+    <li><span class="titulo-item">Iniciando o servidor</span></li>
+    <li><span class="titulo-item">Acesso pela rede local</span></li>
+    <li class="secao">Funcionalidades do Mapa</li>
+    <li><span class="titulo-item">Marcadores e visualização</span></li>
+    <li><span class="titulo-item">Filtros disponíveis</span></li>
+    <li><span class="titulo-item">Programação de serviços</span></li>
+    <li><span class="titulo-item">Painel de Estatísticas</span></li>
+    <li><span class="titulo-item">Exportação para Excel</span></li>
+    <li class="secao">Importação de Dados</li>
+    <li><span class="titulo-item">Importação manual de arquivos</span></li>
+    <li><span class="titulo-item">Atualização automática via Selenium</span></li>
+    <li><span class="titulo-item">Reimportar pasta Flip</span></li>
+    <li class="secao">Estrutura Técnica</li>
+    <li><span class="titulo-item">Arquitetura do sistema</span></li>
+    <li><span class="titulo-item">Modelos de dados</span></li>
+    <li><span class="titulo-item">APIs internas</span></li>
+  </ol>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     1. VISÃO GERAL
+═══════════════════════════════════════════ -->
+<div class="pagina">
+  <h2 class="secao-titulo">1. Visão Geral do Sistema</h2>
+
+  <h3 class="sub-titulo">O que é o Buscador de Serviços</h3>
+  <p>
+    O <strong>Buscador de Serviços</strong> é um sistema web desenvolvido para o CCO (Centro de Controle Operacional)
+    da CPLU que permite <strong>visualizar, filtrar e monitorar</strong> serviços de limpeza urbana em um mapa
+    interativo de São Paulo. O sistema consolida dados de 5 fontes distintas do sistema <em>Selimp (Flip)</em>
+    e disponibiliza as informações geograficamente.
+  </p>
+  <p>
+    Com ele, é possível acompanhar em tempo real quais endereços possuem serviços registrados, quais já foram
+    executados, quais estão pendentes, e quais setores estão programados para um determinado dia.
+  </p>
+
+  <h3 class="sub-titulo">Fontes de Dados Integradas</h3>
+
+  <table class="no-break">
+    <tr>
+      <th>Fonte</th>
+      <th>Descrição</th>
+      <th>Registros atuais</th>
+      <th>Cor no mapa</th>
+    </tr>
+    <tr>
+      <td><span class="fonte-badge" style="background:#ce93d8">CNC</span></td>
+      <td>Controle Notificação de Concessão</td>
+      <td>12.985</td>
+      <td>Roxo</td>
+    </tr>
+    <tr>
+      <td><span class="fonte-badge" style="background:#ff8a65">ACIC</span></td>
+      <td>Auto de Infração / Constatação de Irregularidade de Coleta</td>
+      <td>4.186</td>
+      <td>Laranja</td>
+    </tr>
+    <tr>
+      <td><span class="fonte-badge" style="background:#ffd54f;color:#333">BFS</span></td>
+      <td>Boletim de Fiscalização de Serviços</td>
+      <td>12.620</td>
+      <td>Amarelo</td>
+    </tr>
+    <tr>
+      <td><span class="fonte-badge" style="background:#81c784">OUVIDORIA</span></td>
+      <td>Demandas recebidas pela Ouvidoria</td>
+      <td>254</td>
+      <td>Verde</td>
+    </tr>
+    <tr>
+      <td><span class="fonte-badge" style="background:#4fc3f7">SAC</span></td>
+      <td>Sistema de Atendimento ao Cidadão 156</td>
+      <td>18.925</td>
+      <td>Azul</td>
+    </tr>
+  </table>
+
+  <h3 class="sub-titulo">Números Atuais do Sistema</h3>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-num">48.970</div>
+      <div class="card-label">Serviços cadastrados</div>
+    </div>
+    <div class="card">
+      <div class="card-num">48.968</div>
+      <div class="card-label">Com coordenadas GPS</div>
+    </div>
+    <div class="card laranja">
+      <div class="card-num">112.999</div>
+      <div class="card-label">Pontos de programação</div>
+    </div>
+  </div>
+
+  <div class="destaque">
+    <strong>Cobertura geográfica:</strong> O sistema filtra automaticamente coordenadas fora da área
+    metropolitana de São Paulo (lat -24,5 a -22,5 / lng -47,5 a -45,0), garantindo que apenas
+    registros com localização válida sejam exibidos no mapa.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     2. COMO ACESSAR
+═══════════════════════════════════════════ -->
+<div class="pagina">
+  <h2 class="secao-titulo">2. Como Acessar o Sistema</h2>
+
+  <h3 class="sub-titulo">Iniciando o Servidor</h3>
+  <p>O sistema roda localmente na máquina <strong>10.1.1.27</strong>. Para iniciar, execute o arquivo:</p>
+
+  <div class="cod">📁 \\10.1.1.140\Cco_Centro_de_Controle_Operacional\CCO\Paulo\
+         Códigos de Automação\Buscador-Django\Iniciar buscador.bat</div>
+
+  <p>Ou, se configurado no Agendador de Tarefas do Windows, o servidor sobe automaticamente quando o usuário faz login.</p>
+
+  <ul class="steps">
+    <li>
+      <div class="step-num">1</div>
+      <div class="step-conteudo">
+        <strong>Duplo clique em "Iniciar buscador.bat"</strong>
+        Uma janela CMD se abre mostrando o status do servidor.
+      </div>
+    </li>
+    <li>
+      <div class="step-num">2</div>
+      <div class="step-conteudo">
+        <strong>Aguardar a mensagem de confirmação</strong>
+        A mensagem <span class="cod-inline">Buscador de Servicos - ON</span> indica que o servidor está ativo.
+      </div>
+    </li>
+    <li>
+      <div class="step-num">3</div>
+      <div class="step-conteudo">
+        <strong>Acessar pelo navegador</strong>
+        Abra qualquer navegador e acesse o endereço abaixo.
+      </div>
+    </li>
+  </ul>
+
+  <h3 class="sub-titulo">Acesso pela Rede Local</h3>
+
+  <table class="no-break">
+    <tr>
+      <th>Acesso</th>
+      <th>Endereço</th>
+      <th>Observação</th>
+    </tr>
+    <tr>
+      <td>Máquina local (CCO-02)</td>
+      <td><strong>http://127.0.0.1:8507</strong></td>
+      <td>Acesso direto na máquina que roda o servidor</td>
+    </tr>
+    <tr>
+      <td>Rede interna</td>
+      <td><strong>http://10.1.1.27:8507</strong></td>
+      <td>Qualquer computador na mesma rede</td>
+    </tr>
+  </table>
+
+  <div class="aviso">
+    <strong>⚠ Atenção:</strong> O sistema só fica disponível enquanto a máquina <strong>CCO-02 (10.1.1.27)</strong>
+    estiver ligada e o usuário logado. Se o servidor for encerrado (fechando a janela CMD),
+    o sistema fica indisponível até ser reiniciado.
+  </div>
+
+  <h3 class="sub-titulo">Agendador de Tarefas (Início Automático)</h3>
+  <p>O servidor pode ser configurado para iniciar automaticamente ao fazer login:</p>
+  <table class="no-break">
+    <tr><th>Campo</th><th>Valor</th></tr>
+    <tr><td>Disparador</td><td>Ao fazer logon — usuário CCO-02</td></tr>
+    <tr><td>Programa</td><td>cmd.exe</td></tr>
+    <tr><td>Argumentos</td><td>/c "...\Iniciar buscador.bat"</td></tr>
+    <tr><td>Iniciar em</td><td>C:\Users\CCO-02</td></tr>
+    <tr><td>Executar quando</td><td>Somente quando o usuário estiver conectado</td></tr>
+  </table>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     3. FUNCIONALIDADES DO MAPA
+═══════════════════════════════════════════ -->
+<div class="pagina">
+  <h2 class="secao-titulo">3. Funcionalidades do Mapa</h2>
+
+  <h3 class="sub-titulo">Marcadores e Visualização</h3>
+  <p>
+    O mapa exibe marcadores agrupados por coordenada aproximada (~100m). Cada marcador pode representar
+    múltiplos serviços no mesmo endereço. Os marcadores são divididos visualmente em:
+  </p>
+
+  <div class="card-grid card-grid-2 no-break">
+    <div class="card">
+      <div class="card-titulo">🟢 Feito (verde)</div>
+      <p>Serviços com <strong>data de finalização</strong> ou <strong>data de execução</strong> preenchida,
+      ou cujo status contenha palavras como "finalizado", "executado", "concluído", "realizado".</p>
+    </div>
+    <div class="card laranja">
+      <div class="card-titulo">🟠 Pendente (laranja)</div>
+      <p>Serviços sem data de finalização ou execução e cujo status não indica conclusão. Necessitam atenção ou acompanhamento.</p>
+    </div>
+  </div>
+
+  <p>
+    Ao clicar em um marcador, um <em>popup</em> exibe a lista de serviços naquele ponto,
+    com tipo, status, fonte, data de execução e data de finalização.
+  </p>
+
+  <h3 class="sub-titulo">Filtros Disponíveis</h3>
+
+  <table class="no-break">
+    <tr>
+      <th>Filtro</th>
+      <th>Descrição</th>
+      <th>Localização</th>
+    </tr>
+    <tr>
+      <td>🔍 Endereço / OS</td>
+      <td>Busca por logradouro ou número de OS. Resultado com Enter ou 800ms após digitar.</td>
+      <td>Barra superior</td>
+    </tr>
+    <tr>
+      <td>📅 Mês</td>
+      <td>Filtra serviços por mês/ano de execução ou finalização.</td>
+      <td>Barra superior</td>
+    </tr>
+    <tr>
+      <td>📂 Fonte</td>
+      <td>SAC, CNC, BFS, ACIC, OUVIDORIA. Ao selecionar, o filtro de Status atualiza automaticamente para mostrar apenas os status dessa fonte.</td>
+      <td>Barra superior</td>
+    </tr>
+    <tr>
+      <td>🏷️ Tipo de serviço</td>
+      <td>Filtra por tipo específico (coleta, poda, limpeza, etc).</td>
+      <td>Barra superior</td>
+    </tr>
+    <tr>
+      <td>📋 Status</td>
+      <td>Lista dinâmica: mostra apenas os status da fonte selecionada.</td>
+      <td>Barra superior</td>
+    </tr>
+    <tr>
+      <td>✓⚡ Feito / Pendente</td>
+      <td>Filtra mostrando somente serviços feitos, somente pendentes, ou todos.</td>
+      <td>Barra superior</td>
+    </tr>
+    <tr>
+      <td>🗺️ Programação</td>
+      <td>Exibe pontos de programação de serviços (setores). Com data selecionada, mostra as rotas do dia.</td>
+      <td>Barra superior (direita)</td>
+    </tr>
+  </table>
+
+  <div class="destaque">
+    <strong>Filtro inteligente de status:</strong> Quando uma fonte é selecionada (ex: SAC), o dropdown de status
+    recarrega automaticamente mostrando apenas os status existentes naquela fonte — sem misturar
+    status de diferentes sistemas.
+  </div>
+
+  <h3 class="sub-titulo">Programação de Serviços</h3>
+  <p>
+    O checkbox <strong>Prog.</strong> ativa a camada de programação, exibindo marcadores nos setores
+    agendados. Ao selecionar uma data no campo ao lado, o sistema busca todos os setores
+    programados para aquele dia e desenha as <strong>rotas completas</strong> em cores distintas no mapa.
+  </p>
+  <p>
+    Cada setor possui informações de: subprefeitura, tipo de serviço, horário, quantidade de operadores
+    e veículos, e próximas datas agendadas.
+  </p>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     4. ESTATÍSTICAS E EXPORTAÇÃO
+═══════════════════════════════════════════ -->
+<div class="pagina">
+  <h2 class="secao-titulo">4. Painel de Estatísticas e Exportação</h2>
+
+  <h3 class="sub-titulo">Painel de Estatísticas</h3>
+  <p>
+    O botão <span class="cod-inline">📊 Stats</span> abre um painel lateral com estatísticas em tempo real,
+    sempre respeitando os filtros ativos:
+  </p>
+
+  <div class="card-grid no-break">
+    <div class="card">
+      <div class="card-titulo">📊 Totais</div>
+      <p>Total de serviços, quantidade feitos e quantidade pendentes.</p>
+    </div>
+    <div class="card">
+      <div class="card-titulo">📂 Por Fonte</div>
+      <p>Barras de quantidade por fonte (SAC, CNC, BFS, ACIC, OUVIDORIA).</p>
+    </div>
+    <div class="card laranja">
+      <div class="card-titulo">🏷️ Top Tipos</div>
+      <p>Os 10 tipos de serviço mais frequentes com contagem e barra visual.</p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px;">
+    <div class="card-titulo">🗺️ Por Regional</div>
+    <p>Cards por subprefeitura mostrando número de setores e pontos de programação cadastrados.</p>
+  </div>
+
+  <h3 class="sub-titulo">Exportação para Excel</h3>
+  <p>
+    O botão <span class="cod-inline">↓ Excel</span> exporta todos os serviços com os <strong>filtros ativos</strong>
+    para um arquivo <em>.xlsx</em>. As colunas exportadas são:
+  </p>
+  <table class="no-break">
+    <tr>
+      <th>Nº OS</th><th>Tipo de Serviço</th><th>Status</th><th>Fonte</th>
+      <th>Endereço</th><th>Latitude</th><th>Longitude</th><th>Data Execução</th><th>Data Abertura</th>
+    </tr>
+    <tr>
+      <td colspan="9" style="text-align:center;color:#999;font-style:italic;">
+        O arquivo é nomeado automaticamente com a data: servicos_AAAAMMDD.xlsx
+      </td>
+    </tr>
+  </table>
+
+  <div class="aviso">
+    <strong>Dica:</strong> Use os filtros antes de exportar para gerar relatórios específicos —
+    por exemplo, apenas os serviços <em>pendentes</em> do <em>SAC</em> no mês de <em>março/2026</em>.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     5. IMPORTAÇÃO DE DADOS
+═══════════════════════════════════════════ -->
+<div class="pagina">
+  <h2 class="secao-titulo">5. Importação de Dados</h2>
+  <p>
+    Acesse a tela de importação pelo botão <span class="cod-inline">+ Importar</span> no canto superior direito do mapa.
+    Existem três formas de atualizar os dados:
+  </p>
+
+  <h3 class="sub-titulo">5.1 — Importação Manual de Arquivo</h3>
+  <p>
+    Utilize quando quiser importar um relatório baixado manualmente do Selimp.
+    O sistema detecta automaticamente o tipo (CNC, BFS, ACIC, OUVIDORIA, SAC)
+    pelo nome do arquivo.
+  </p>
+  <ul class="steps no-break">
+    <li>
+      <div class="step-num">1</div>
+      <div class="step-conteudo">
+        <strong>Baixar o relatório do Selimp</strong>
+        Acesse selimp25.sflip.online, filtre o período desejado e exporte o CSV.
+      </div>
+    </li>
+    <li>
+      <div class="step-num">2</div>
+      <div class="step-conteudo">
+        <strong>Selecionar o tipo de importação</strong>
+        Escolha "Relatório Flip" para serviços, ou "Consultas Programadas" para programação.
+      </div>
+    </li>
+    <li>
+      <div class="step-num">3</div>
+      <div class="step-conteudo">
+        <strong>Enviar o arquivo</strong>
+        Clique em "Importar". O sistema lê o CSV, detecta as colunas automaticamente e insere os registros no banco.
+      </div>
+    </li>
+  </ul>
+
+  <div class="aviso">
+    <strong>⚠ Atenção:</strong> O nome do arquivo <strong>deve conter</strong> o identificador da fonte:
+    <span class="cod-inline">CNC</span>, <span class="cod-inline">BFS</span>,
+    <span class="cod-inline">ACIC</span>, <span class="cod-inline">OUVIDORIA</span> ou
+    <span class="cod-inline">SAC</span>. Exemplo: <em>FLIP_CONSULTA_BFS_2026.csv</em>
+  </div>
+
+  <h3 class="sub-titulo">5.2 — Atualização Automática via Selenium</h3>
+  <p>
+    O botão <strong>"▶ Baixar e Importar Agora"</strong> abre o Chrome automaticamente,
+    faz login no Selimp e baixa os relatórios de todas as 5 fontes sem intervenção manual.
+  </p>
+
+  <table class="no-break">
+    <tr><th>Etapa</th><th>O que acontece</th></tr>
+    <tr><td>Login</td><td>Chrome abre e faz login em selimp25.sflip.online automaticamente</td></tr>
+    <tr><td>Download CNC</td><td>Navega para CNC → Consulta → define datas → exporta CSV</td></tr>
+    <tr><td>Download OUVIDORIA</td><td>Navega para Ouvidoria → define datas → exporta CSV</td></tr>
+    <tr><td>Download BFS</td><td>Navega para BFS → define datas → exporta CSV</td></tr>
+    <tr><td>Download ACIC</td><td>Navega para ACIC → define datas → exporta CSV</td></tr>
+    <tr><td>Download SAC 156</td><td>Navega para SAC → define datas → exporta CSV</td></tr>
+    <tr><td>Importação</td><td>Cada CSV é importado direto no banco. Arquivos são removidos após importar.</td></tr>
+    <tr><td>Conclusão</td><td>Beep sonoro indica que o processo foi concluído com sucesso</td></tr>
+  </table>
+
+  <div class="destaque">
+    <strong>Configuração do período:</strong> O campo "Data de início do período" na tela de importação
+    define a data inicial para o filtro no Selimp. O sistema sempre usa a data atual como data final.
+    Padrão: <span class="cod-inline">01/04/2025</span>
+  </div>
+
+  <h3 class="sub-titulo">5.3 — Reimportar Pasta Flip</h3>
+  <p>
+    Se os arquivos CSV estiverem salvos na pasta <span class="cod-inline">Flip/</span> do projeto,
+    o botão <strong>"Limpar e Reimportar Pasta Flip"</strong> apaga todos os dados existentes e
+    reimporta todos os arquivos de uma vez, com tratamento de encoding automático.
+  </p>
+  <div class="aviso">
+    <strong>⚠ Esta operação apaga todos os serviços do banco</strong> antes de reimportar.
+    A programação de setores <strong>não é afetada</strong>.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     6. ESTRUTURA TÉCNICA
+═══════════════════════════════════════════ -->
+<div class="pagina">
+  <h2 class="secao-titulo">6. Estrutura Técnica</h2>
+
+  <h3 class="sub-titulo">Arquitetura do Sistema</h3>
+
+  <div class="cod">┌─────────────────────────────────────────────────────┐
+│                  NAVEGADOR (Cliente)                │
+│  Leaflet.js · MarkerCluster · Heatmap · Chart.js   │
+└────────────────────┬────────────────────────────────┘
+                     │ HTTP (porta 8507)
+┌────────────────────▼────────────────────────────────┐
+│              DJANGO 6.0 (Servidor Web)              │
+│  Views · URLs · Templates · ORM                    │
+└────────────────────┬────────────────────────────────┘
+                     │
+┌────────────────────▼────────────────────────────────┐
+│              SQLite (Banco de Dados)                │
+│  Servico · ProgramacaoServico · ConsultaProgramada │
+│  ImportacaoRelatorio                               │
+└─────────────────────────────────────────────────────┘
+                     │ (automação)
+┌────────────────────▼────────────────────────────────┐
+│           Selenium + ChromeDriver                   │
+│  selimp25.sflip.online → CSV → importador.py       │
+└─────────────────────────────────────────────────────┘</div>
+
+  <h3 class="sub-titulo">Modelos de Dados</h3>
+
+  <table class="no-break">
+    <tr><th>Modelo</th><th>Descrição</th><th>Campos principais</th></tr>
+    <tr>
+      <td><strong>Servico</strong></td>
+      <td>Registro de cada serviço importado do Flip</td>
+      <td>numero_os, tipo_servico, status, endereco, latitude, longitude, data_execucao, data_finalizacao, fonte</td>
+    </tr>
+    <tr>
+      <td><strong>ProgramacaoServico</strong></td>
+      <td>Pontos do plano de trabalho por subprefeitura</td>
+      <td>subprefeitura, tipo_nome, setor, logradouro, latitude, longitude, opcoes_data, qtd_operadores</td>
+    </tr>
+    <tr>
+      <td><strong>ConsultaProgramada</strong></td>
+      <td>Consultas internas com data programada</td>
+      <td>endereco, tipo_servico, data_programada, latitude, longitude</td>
+    </tr>
+    <tr>
+      <td><strong>ImportacaoRelatorio</strong></td>
+      <td>Histórico de cada importação realizada</td>
+      <td>arquivo_nome, tipo, total_registros, importado_em</td>
+    </tr>
+  </table>
+
+  <h3 class="sub-titulo">APIs Internas</h3>
+
+  <table class="no-break">
+    <tr><th>Endpoint</th><th>Método</th><th>Descrição</th></tr>
+    <tr><td>/api/dados/</td><td>GET</td><td>Retorna pontos para o mapa. Aceita filtros: tipo, status, fonte, busca, mes, resolucao</td></tr>
+    <tr><td>/api/stats/</td><td>GET</td><td>Estatísticas agregadas (total, feitos, pendentes, por fonte, por tipo, por regional)</td></tr>
+    <tr><td>/api/programacao/</td><td>GET</td><td>Pontos de programação por setor. Filtro por subprefeitura, tipo, data e busca</td></tr>
+    <tr><td>/api/programacao/dia/&lt;data&gt;/</td><td>GET</td><td>Todos os segmentos de rota de todos os setores de uma data específica</td></tr>
+    <tr><td>/api/setor/&lt;setor&gt;/</td><td>GET</td><td>Segmentos de um setor específico agrupados por logradouro</td></tr>
+    <tr><td>/api/regioes/</td><td>GET</td><td>GeoJSON das regionais de atuação</td></tr>
+    <tr><td>/importar/</td><td>GET/POST</td><td>Tela e ação de importação de arquivos</td></tr>
+    <tr><td>/atualizar-flip/</td><td>POST</td><td>Dispara a automação Selenium em segundo plano</td></tr>
+    <tr><td>/exportar-excel/</td><td>GET</td><td>Gera e baixa planilha Excel com os filtros ativos</td></tr>
+  </table>
+
+  <h3 class="sub-titulo">Principais Dependências</h3>
+  <table class="no-break">
+    <tr><th>Tecnologia</th><th>Versão</th><th>Uso</th></tr>
+    <tr><td>Django</td><td>6.0.3</td><td>Framework web principal</td></tr>
+    <tr><td>Python</td><td>3.14</td><td>Linguagem base</td></tr>
+    <tr><td>Leaflet.js</td><td>1.9.4</td><td>Mapa interativo no navegador</td></tr>
+    <tr><td>Selenium</td><td>—</td><td>Automação do download no Selimp</td></tr>
+    <tr><td>openpyxl</td><td>—</td><td>Exportação para Excel</td></tr>
+    <tr><td>webdriver-manager</td><td>—</td><td>Gerenciamento automático do ChromeDriver</td></tr>
+    <tr><td>SQLite</td><td>—</td><td>Banco de dados local</td></tr>
+  </table>
+
+  <hr class="divider">
+
+  <div class="destaque" style="margin-top:24px;">
+    <strong>Contato e manutenção:</strong> Sistema desenvolvido pela equipe de automação do CCO/CPLU.
+    Dúvidas técnicas ou solicitações de ajuste devem ser direcionadas ao responsável pelo projeto.
+    <br><br>
+    <strong>Repositório:</strong> github.com/paulo2024henriquecostadesouza-hub
+  </div>
+
+  <div class="rodape-pagina">
+    <span>Buscador de Serviços — Sistema Interno CPLU / CCO</span>
+    <span>Documentação gerada em Abril/2026</span>
+  </div>
+</div>
+
+<!-- Botão de impressão (não aparece no PDF) -->
+<div style="position:fixed;bottom:24px;right:24px;z-index:999;print-color-adjust:exact;" class="no-print">
+  <button onclick="window.print()"
+    style="background:linear-gradient(90deg,#2E4E46,#C16A42);color:#fff;border:none;
+           padding:12px 28px;border-radius:8px;font-size:12pt;font-weight:700;
+           cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.3);font-family:'Rubik',sans-serif;">
+    🖨️ Salvar como PDF
+  </button>
+</div>
+<style>@media print { .no-print { display:none!important; } }</style>
+
+</body>
+</html>

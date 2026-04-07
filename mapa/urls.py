@@ -8,6 +8,7 @@ urlpatterns = [
     path('api/dados/', views.dados_mapa, name='dados_mapa'),
     path('importar/', views.importar, name='importar'),
     path('exportar/', views.exportar_excel, name='exportar_excel'),
+    path('limpar-pasta/', views.limpar_pasta, name='limpar_pasta'),
     path('reimportar-pasta/', views.reimportar_pasta, name='reimportar_pasta'),
     path('atualizar-flip/', views.atualizar_flip, name='atualizar_flip'),
     path('api/stats/', views.stats_mapa, name='stats_mapa'),

@@ -322,6 +322,26 @@
         </form>
     </div>
 
+    <!-- Limpar Pasta e Dados -->
+    <div class="card" style="border-color: #e94560;">
+        <div class="card-title">
+            <span class="dot" style="background:#e94560;"></span>
+            Limpar Tudo
+        </div>
+        <div class="dica" style="border-color: #e94560;">
+            Apaga <strong>todos os arquivos</strong> da pasta <strong>Flip/</strong> e
+            <strong>todos os serviços</strong> do banco de dados.<br>
+            <small style="color:#f0a070;">⚠ A <strong>programação</strong> é mantida. Esta ação não pode ser desfeita.</small>
+        </div>
+        <form method="post" action="{% url 'mapa:limpar_pasta' %}"
+              onsubmit="return confirm('⚠ ATENÇÃO!\n\nIsso vai apagar:\n• Todos os arquivos da pasta Flip/\n• Todos os serviços do banco\n\nA programação será mantida.\n\nDeseja continuar?')">
+            {% csrf_token %}
+            <button type="submit" class="btn" style="background:linear-gradient(90deg,#7b1a2e,#e94560);color:#fff;width:100%;padding:11px;">
+                &#128465; Limpar Pasta e Dados
+            </button>
+        </form>
+    </div>
+
     <!-- Histórico -->
     {% if historico %}
     <div class="card">

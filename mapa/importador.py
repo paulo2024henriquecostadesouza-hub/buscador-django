@@ -234,6 +234,11 @@ def importar_relatorio_flip(arquivo, fonte=None):
             fonte=tipo_fonte or 'Flip',
         ))
 
+    # Limpa registros anteriores da mesma fonte antes de inserir os novos.
+    # Isso evita duplicidade quando o mesmo arquivo é reimportado.
+    if tipo_fonte:
+        Servico.objects.filter(fonte=tipo_fonte).delete()
+
     Servico.objects.bulk_create(objs, batch_size=500)
     total = len(objs)
 

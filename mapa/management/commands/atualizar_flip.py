@@ -7,6 +7,7 @@ Uso:
     python manage.py atualizar_flip --sem-limpar   (acumula sem apagar dados anteriores)
 """
 import os
+import shutil
 import time
 import winsound
 from datetime import date
@@ -58,6 +59,16 @@ def _aguardar_csv(pasta, timeout=90):
     return None
 
 
+def _salvar_na_pasta_flip(caminho_csv, fonte):
+    """Copia o CSV baixado para a pasta Flip/ do projeto, sobrescrevendo o anterior."""
+    from django.conf import settings
+    pasta_flip = os.path.join(str(settings.BASE_DIR), 'Flip')
+    os.makedirs(pasta_flip, exist_ok=True)
+    destino = os.path.join(pasta_flip, f'FLIP_CONSULTA_{fonte}.csv')
+    shutil.copy2(caminho_csv, destino)
+    return destino
+
+
 def _importar_csv(caminho_csv, fonte, stdout, style):
     """Abre o CSV e chama o importador Django passando a fonte explicitamente."""
     time.sleep(5)  # garante que o Windows liberou o arquivo
@@ -73,6 +84,13 @@ def _importar_csv(caminho_csv, fonte, stdout, style):
                         return f.read()
 
                 total = importar_relatorio_flip(_Wrapper(), fonte)
+
+            # Salva cópia na pasta Flip/ para que "Reimportar Pasta" funcione
+            try:
+                destino = _salvar_na_pasta_flip(caminho_csv, fonte)
+                stdout.write(f"  → Cópia salva em: {destino}")
+            except Exception as e:
+                stdout.write(f"  [AVISO] Não foi possível salvar na pasta Flip: {e}")
 
             try:
                 os.remove(caminho_csv)
@@ -130,12 +148,15 @@ class Command(BaseCommand):
         self.stdout.write(f"  Abas: {', '.join(a for a, _ in ABAS)}")
         self.stdout.write(f"{'='*55}\n")
 
-        # Limpa dados anteriores (opcional)
+        # Limpa TODOS os dados anteriores só se explicitamente pedido via --sem-limpar=False
+        # (comportamento padrão: cada fonte limpa apenas os seus próprios registros no importador)
         if not sem_limpar:
             total_apagados = Servico.objects.count()
             Servico.objects.all().delete()
             ImportacaoRelatorio.objects.filter(tipo="relatorio").delete()
-            self.stdout.write(f"  {total_apagados} registros apagados.\n")
+            self.stdout.write(f"  {total_apagados} registros apagados (limpeza total).\n")
+        else:
+            self.stdout.write("  Modo acumulativo: cada fonte substituirá apenas seus próprios registros.\n")
 
         # Configura o Chrome — força download sem popup e sem confirmação
         prefs = {

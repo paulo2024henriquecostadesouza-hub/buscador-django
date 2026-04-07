@@ -578,6 +578,12 @@
         <div id="st-fontes"></div>
     </div>
 
+    <!-- Por Status -->
+    <div class="stats-secao">
+        <div class="stats-secao-titulo">Por Status</div>
+        <div id="st-status"></div>
+    </div>
+
     <!-- Por Tipo de Serviço -->
     <div class="stats-secao">
         <div class="stats-secao-titulo">Top Tipos de Serviço</div>
@@ -1199,6 +1205,26 @@
                 </div>
             </div>`;
         }).join('');
+
+        // Por status
+        const divStatus = document.getElementById('st-status');
+        const maxStatus = Math.max(...data.por_status.map(s => s.total), 1);
+        divStatus.innerHTML = data.por_status.map(s => {
+            const feito = /finaliz|execut|conclu|realiz/i.test(s.status || '');
+            const cor   = feito ? '#2e8b57' : '#C16A42';
+            const icone = feito ? '✓' : '⚡';
+            const pct   = Math.round((s.total / maxStatus) * 100);
+            const nome  = s.status || 'Não informado';
+            return `<div class="bar-item">
+                <div class="bar-header">
+                    <span class="bar-nome" style="color:${cor}">${icone} ${nome}</span>
+                    <span class="bar-val">${s.total.toLocaleString('pt-BR')}</span>
+                </div>
+                <div class="bar-track">
+                    <div class="bar-fill" style="width:${pct}%;background:${cor}"></div>
+                </div>
+            </div>`;
+        }).join('') || '<span style="color:var(--muted);font-size:0.76rem">Sem dados</span>';
 
         // Por tipo
         const divTipos = document.getElementById('st-tipos');

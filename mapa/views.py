@@ -513,9 +513,14 @@ def stats_mapa(request):
     feitos   = qs.filter(_feito_q()).count()
     pendentes = total - feitos
 
-    # Por fonte (com breakdown feito/pendente)
+    # Por fonte
     por_fonte_raw = list(
         qs.values('fonte').annotate(total=Count('id')).order_by('-total')
+    )
+
+    # Por status (top 15)
+    por_status = list(
+        qs.values('status').annotate(total=Count('id')).order_by('-total')[:15]
     )
 
     # Por tipo (top 10)
@@ -536,6 +541,7 @@ def stats_mapa(request):
         'feitos':       feitos,
         'pendentes':    pendentes,
         'por_fonte':    por_fonte_raw,
+        'por_status':   por_status,
         'por_tipo':     por_tipo,
         'por_regional': por_regional,
     })
@@ -575,6 +581,44 @@ def atualizar_flip(request):
     except Exception as e:
         messages.error(request, f'Erro ao iniciar automação: {e}')
 
+    return redirect('mapa:importar')
+
+
+def limpar_pasta(request):
+    """
+    Apaga todos os arquivos da pasta Flip/ e remove todos os serviços do banco.
+    Mantém intactos: ProgramacaoServico e ConsultaProgramada.
+    """
+    if request.method != 'POST':
+        from django.http import HttpResponseNotAllowed
+        return HttpResponseNotAllowed(['POST'])
+
+    import os
+    from django.conf import settings
+
+    # Remove arquivos da pasta Flip/
+    pasta = os.path.join(settings.BASE_DIR, 'Flip')
+    arquivos_removidos = 0
+    if os.path.isdir(pasta):
+        for fname in os.listdir(pasta):
+            if fname.lower().endswith(('.csv', '.xlsx', '.xls')):
+                try:
+                    os.remove(os.path.join(pasta, fname))
+                    arquivos_removidos += 1
+                except Exception:
+                    pass
+
+    # Remove todos os serviços e histórico de importação
+    total_servicos = Servico.objects.count()
+    Servico.objects.all().delete()
+    ImportacaoRelatorio.objects.filter(tipo='relatorio').delete()
+
+    messages.success(
+        request,
+        f'Limpeza concluída: {total_servicos} serviços removidos e '
+        f'{arquivos_removidos} arquivo(s) da pasta Flip apagados. '
+        f'A programação foi mantida.'
+    )
     return redirect('mapa:importar')
 
 

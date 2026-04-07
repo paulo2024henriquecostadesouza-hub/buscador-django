@@ -30,3 +30,8 @@ desktop.ini
 
 # Downloads temporários
 *.csv.tmp
+
+# Dados locais e arquivos baixados
+Flip/
+programação/
+data/
